@@ -10,10 +10,9 @@ workflows:
       - npm install
       - npm run build
       - npx cap sync android
-      - ls -la android
       - cd android
-      - if [ -f "./gradlew" ]; then chmod +x ./gradlew && ./gradlew assembleDebug; elif [ -f "./gradlew.bat" ]; then ./gradlew.bat assembleDebug; else echo "No Gradle wrapper found"; exit 1; fi
+      - chmod +x gradlew
+      - ./gradlew assembleDebug
 
     artifacts:
-      - android/app/build/outputs/**/*.apk
-      - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/apk/debug/*.apk
