@@ -1,0 +1,18 @@
+workflows:
+  android-apk:
+    name: Android APK Build
+
+    environment:
+      node: latest
+      java: 17
+
+    scripts:
+      - npm install
+      - npm run build
+      - npx cap sync android
+      - cd android
+      - chmod +x gradlew
+      - ./gradlew assembleDebug
+
+    artifacts:
+      - android/app/build/outputs/apk/debug/*.apk
