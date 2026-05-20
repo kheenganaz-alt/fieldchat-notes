@@ -7,12 +7,16 @@ workflows:
       java: 17
 
     scripts:
-      - npm install
-      - npm run build
-      - npx cap sync android
-      - cd android
-      - chmod +x gradlew
-      - ./gradlew assembleDebug
+      - name: Install dependencies and build APK
+        script: |
+          npm install
+          npm run build
+          npx cap sync android
+          cd android
+          ls -la
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
     artifacts:
-      - android/app/build/outputs/apk/debug/*.apk
+      - android/app/build/outputs/**/*.apk
+      - android/app/build/outputs/**/*.aab
