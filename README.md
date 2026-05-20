@@ -40,3 +40,4 @@ In Android Studio, build `app-debug.apk` or create a signed release. The app nam
 - The active session, draft text, timer, and scroll position are restored after app switching, lock screen, or reload.
 - Exports throw a clear error instead of generating empty files.
 - The route planner supports manual stop ordering, status tracking, and Google Maps launch.
+# GadgetvaluerNg
