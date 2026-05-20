@@ -9,9 +9,12 @@ workflows:
     scripts:
       - npm install
       - npm run build
+      - rm -rf android
+      - npx cap add android
       - npx cap sync android
       - cd android
-      - chmod +x ./gradlew
+      - ls -la
+      - chmod +x gradlew
       - ./gradlew assembleDebug
 
     artifacts:
