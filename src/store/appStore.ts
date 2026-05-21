@@ -221,7 +221,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
       createdAt
     };
     await putRecord("photos", photo);
-    await get().addTimestamp(sessionId, caption ?? "Photo Taken", "chip");
     set((state) => ({ photos: [photo, ...state.photos] }));
     void syncUserData(user.id);
   },

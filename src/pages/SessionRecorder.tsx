@@ -120,7 +120,7 @@ export default function SessionRecorder() {
         </div>
       </header>
 
-      <div ref={scroller} onClick={handleTap} onDoubleClick={(event) => event.preventDefault()} onContextMenu={(event) => { event.preventDefault(); void stamp("Long Press", "long"); }} className="flex-1 overflow-y-auto px-3 py-4">
+      <div ref={scroller} onClick={handleTap} onDoubleClick={(event) => event.preventDefault()} onContextMenu={(event) => { event.preventDefault(); void stamp("Long Press", "long"); }} className="flex-1 overflow-y-auto px-3 py-4 pb-48">
         <div className="mx-auto flex max-w-4xl flex-col gap-3">
           {events.map((entry) => (
             <motion.div key={`${entry.type}-${entry.at}`} initial={{ opacity: 0, y: 8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} className={entry.type === "note" ? "self-end" : "self-start"}>
@@ -153,7 +153,7 @@ export default function SessionRecorder() {
 
       <footer className="z-20 border-t border-slate-200 bg-white/94 px-3 pt-3 backdrop-blur-xl safe-bottom dark:border-white/10 dark:bg-slate-950/94">
         <div className="mx-auto max-w-4xl">
-          <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+          <div className="mb-3 flex touch-pan-x gap-2 overflow-x-auto overscroll-contain pb-1">
             {quickEvents.filter((event) => store.settings?.quickEventSettings?.[event] ?? true).map((event) => (
               <button key={event} onClick={() => stamp(event, "chip")} className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">{event}</button>
             ))}

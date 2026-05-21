@@ -14,6 +14,14 @@ const items = [
   { to: "/settings", label: "Settings", icon: Settings }
 ];
 
+const mobileItems = [
+  { to: "/", label: "Home", icon: Home },
+  { to: "/sessions", label: "Sessions", icon: MessageSquareText },
+  { to: "/reports", label: "Reports", icon: FileText },
+  { to: "/search", label: "Search", icon: Search },
+  { to: "/settings", label: "Settings", icon: Settings }
+];
+
 export default function AppShell() {
   const navigate = useNavigate();
   const { settings, startQuickSession } = useAppStore();
@@ -55,7 +63,7 @@ export default function AppShell() {
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-slate-200 bg-white/92 px-2 pt-2 backdrop-blur-xl safe-bottom dark:border-white/10 dark:bg-slate-950/92 lg:hidden">
-        {items.slice(0, 5).map((item) => (
+        {mobileItems.map((item) => (
           <NavLink key={item.to} to={item.to} className={({ isActive }) => `flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-[11px] font-semibold ${isActive ? "text-orange-600 dark:text-orange-300" : "text-slate-500 dark:text-slate-400"}`}>
             <item.icon size={20} />
             <span className="max-w-full truncate">{item.label}</span>
