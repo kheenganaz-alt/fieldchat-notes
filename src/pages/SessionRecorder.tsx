@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Camera, Check, Mic, Plus, Send, Timer, Zap } from "lucide-react";
+import { Camera, Check, ChevronLeft, Home, Mic, Plus, Send, Timer, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { quickEvents, sessionEvents, useAppStore } from "../store/appStore";
 import { capturePhotoOnDemand, requestMicrophoneOnDemand, vibrateIfEnabled } from "../services/permissions";
@@ -79,27 +79,43 @@ export default function SessionRecorder() {
   async function doExport(format: "pdf" | "docx" | "txt" | "csv") {
     setExportError("");
     try {
-      await exportSession({
+      const result = await exportSession({
         session: { ...activeSession, durationSeconds: elapsed },
         notes: store.notes.filter((note) => note.sessionId === sessionId),
         timestamps: store.timestamps.filter((event) => event.sessionId === sessionId),
         photos: store.photos.filter((photo) => photo.sessionId === sessionId)
       }, format);
+      setExportError(`Export ready: ${result.filename}`);
     } catch (error) {
       setExportError(error instanceof Error ? error.message : "Export failed.");
     }
   }
 
+  async function finishSession() {
+    await store.completeSession(sessionId);
+    navigate("/sessions");
+  }
+
   return (
     <div className="flex h-screen flex-col bg-slate-100 text-slate-950 dark:bg-slate-950 dark:text-white">
       <header className="z-20 border-b border-white/70 bg-white/84 px-4 safe-top shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/86">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 py-3">
-          <button onClick={() => navigate("/")} className="tap-target rounded-2xl bg-slate-100 px-3 text-sm font-bold dark:bg-white/10">Back</button>
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-2 py-3">
+          <div className="flex items-center gap-2">
+            <button aria-label="Back to home" onClick={() => navigate("/")} className="tap-target grid place-items-center rounded-2xl bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-200">
+              <ChevronLeft size={21} />
+            </button>
+            <button aria-label="Home" onClick={() => navigate("/")} className="tap-target hidden place-items-center rounded-2xl bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-200 sm:grid">
+              <Home size={19} />
+            </button>
+          </div>
           <div className="min-w-0 text-center">
             <p className="truncate text-base font-extrabold">{store.settings?.discreetMode ? "Messages" : session.title}</p>
             <p className="flex items-center justify-center gap-1 text-xs font-bold text-slate-500"><Timer size={13} />{formatElapsed(elapsed)}</p>
           </div>
-          <button onClick={() => store.completeSession(id)} className="tap-target rounded-2xl bg-emerald-600 px-3 text-sm font-bold text-white"><Check size={17} /></button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate("/sessions")} className="tap-target rounded-2xl bg-slate-100 px-3 text-xs font-extrabold text-slate-700 dark:bg-white/10 dark:text-slate-200">Saved</button>
+            <button aria-label="Finish session" onClick={finishSession} className="tap-target rounded-2xl bg-emerald-600 px-3 text-sm font-bold text-white"><Check size={17} /></button>
+          </div>
         </div>
       </header>
 
@@ -151,7 +167,7 @@ export default function SessionRecorder() {
             <div className="flex gap-1">
               {(["pdf", "docx", "txt", "csv"] as const).map((format) => <button key={format} onClick={() => doExport(format)} className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-extrabold uppercase dark:bg-white/10">{format}</button>)}
             </div>
-            {exportError && <p className="text-right text-xs font-bold text-rose-600">{exportError}</p>}
+            {exportError && <p className={`text-right text-xs font-bold ${exportError.startsWith("Export ready") ? "text-emerald-600" : "text-rose-600"}`}>{exportError}</p>}
             {!exportError && <Plus size={16} className="text-slate-400" />}
           </div>
         </div>

@@ -1,22 +1,65 @@
 workflows:
-  android-apk:
-    name: Android APK Build
-
+  android-debug-apk:
+    name: FieldChat Notes Android Debug APK
+    max_build_duration: 60
+    instance_type: mac_mini_m2
     environment:
-      node: latest
-      java: 21
-
+      node: 22
+      java: 17
+    cache:
+      cache_paths:
+        - $CM_BUILD_DIR/node_modules
+        - $HOME/.gradle/caches
+        - $HOME/.gradle/wrapper
     scripts:
-      - name: Install dependencies and build APK
+      - name: Install dependencies
         script: |
           npm install
+      - name: Build web app
+        script: |
           npm run build
+      - name: Sync Capacitor Android
+        script: |
           npx cap sync android
+      - name: Build debug APK
+        script: |
           cd android
-          ls -la
           chmod +x gradlew
           ./gradlew assembleDebug
-
     artifacts:
       - android/app/build/outputs/**/*.apk
-      - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/**/mapping.txt
+      - android/app/build/outputs/**/logs/*.txt
+
+  android-release-apk:
+    name: FieldChat Notes Android Release APK
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      node: 22
+      java: 17
+      vars:
+        PACKAGE_NAME: "com.fieldchat.notes"
+    cache:
+      cache_paths:
+        - $CM_BUILD_DIR/node_modules
+        - $HOME/.gradle/caches
+        - $HOME/.gradle/wrapper
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install
+      - name: Build web app
+        script: |
+          npm run build
+      - name: Sync Capacitor Android
+        script: |
+          npx cap sync android
+      - name: Build release APK
+        script: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+    artifacts:
+      - android/app/build/outputs/**/*.apk
+      - android/app/build/outputs/**/mapping.txt

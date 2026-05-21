@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import SessionRecorder from "./pages/SessionRecorder";
+import Sessions from "./pages/Sessions";
 import RoutePlanner from "./pages/RoutePlanner";
 import Insights from "./pages/Insights";
 import Search from "./pages/Search";
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/signup" element={user ? <Navigate to="/" replace /> : <Signup />} />
         <Route element={user ? <AppShell /> : <Navigate to="/login" replace />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/sessions" element={<Sessions />} />
           <Route path="/session/:id" element={<SessionRecorder />} />
           <Route path="/routes" element={<RoutePlanner />} />
           <Route path="/insights" element={<Insights />} />

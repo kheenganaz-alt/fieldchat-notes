@@ -1,6 +1,9 @@
 import { Document, Packer, Paragraph, TextRun } from "docx";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
+import { Capacitor } from "@capacitor/core";
+import { Directory, Filesystem } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 import { createId } from "../lib/id";
 import { formatDateTime, formatElapsed } from "../lib/time";
 import { putRecord } from "./db";
@@ -13,18 +16,22 @@ export interface ExportPayload {
   photos: PhotoRecord[];
 }
 
+export interface ExportResult {
+  record: ExportRecord;
+  filename: string;
+  uri?: string;
+}
+
 export function hasExportContent(payload: ExportPayload) {
   return Boolean(payload.session && (payload.notes.length || payload.timestamps.length || payload.photos.length || payload.session.summary));
 }
 
-export async function exportSession(payload: ExportPayload, format: ExportFormat) {
+export async function exportSession(payload: ExportPayload, format: ExportFormat): Promise<ExportResult> {
   if (!hasExportContent(payload)) throw new Error("This session has no notes, timestamps, photos, or summary to export.");
 
   const filename = `${payload.session.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-${formatDateSlug(payload.session.startedAt)}`;
-  if (format === "pdf") exportPdf(payload, `${filename}.pdf`);
-  if (format === "docx") await exportDocx(payload, `${filename}.docx`);
-  if (format === "txt") exportText(payload, `${filename}.txt`);
-  if (format === "csv") exportCsv(payload, `${filename}.csv`);
+  const file = await buildExport(payload, format, filename);
+  const uri = await saveExportFile(file);
 
   const record: ExportRecord = {
     id: createId("export"),
@@ -34,7 +41,14 @@ export async function exportSession(payload: ExportPayload, format: ExportFormat
     createdAt: new Date().toISOString()
   };
   await putRecord("exports", record);
-  return record;
+  return { record, filename: file.filename, uri };
+}
+
+async function buildExport(payload: ExportPayload, format: ExportFormat, filename: string) {
+  if (format === "pdf") return exportPdf(payload, `${filename}.pdf`);
+  if (format === "docx") return exportDocx(payload, `${filename}.docx`);
+  if (format === "txt") return exportText(payload, `${filename}.txt`);
+  return exportCsv(payload, `${filename}.csv`);
 }
 
 function exportPdf(payload: ExportPayload, filename: string) {
@@ -52,7 +66,11 @@ function exportPdf(payload: ExportPayload, filename: string) {
   y = writeLines(pdf, "Notes", payload.notes.map((note) => `${formatDateTime(note.createdAt)}  ${note.body}`), y);
   y = writeLines(pdf, "Photos", payload.photos.map((photo) => `${formatDateTime(photo.createdAt)}  ${photo.caption ?? "Photo evidence attached in app"}`), y);
   if (payload.session.summary) writeLines(pdf, "Summary", [payload.session.summary], y);
-  pdf.save(filename);
+  return {
+    filename,
+    blob: pdf.output("blob"),
+    mimeType: "application/pdf"
+  };
 }
 
 function writeLines(pdf: jsPDF, heading: string, lines: string[], y: number) {
@@ -90,7 +108,11 @@ async function exportDocx(payload: ExportPayload, filename: string) {
     ]
   });
   const blob = await Packer.toBlob(doc);
-  saveAs(blob, filename);
+  return {
+    filename,
+    blob,
+    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  };
 }
 
 function section(title: string, lines: string[]) {
@@ -102,7 +124,11 @@ function section(title: string, lines: string[]) {
 }
 
 function exportText(payload: ExportPayload, filename: string) {
-  saveBlob(renderPlain(payload), filename, "text/plain;charset=utf-8");
+  return {
+    filename,
+    blob: new Blob([renderPlain(payload)], { type: "text/plain;charset=utf-8" }),
+    mimeType: "text/plain"
+  };
 }
 
 function exportCsv(payload: ExportPayload, filename: string) {
@@ -110,7 +136,11 @@ function exportCsv(payload: ExportPayload, filename: string) {
   payload.timestamps.forEach((event) => rows.push(["timestamp", event.occurredAt, String(event.elapsedSeconds), event.label ?? ""]));
   payload.notes.forEach((note) => rows.push(["note", note.createdAt, "", note.body]));
   payload.photos.forEach((photo) => rows.push(["photo", photo.createdAt, "", photo.caption ?? "Photo"]));
-  saveBlob(rows.map((row) => row.map(csvCell).join(",")).join("\n"), filename, "text/csv;charset=utf-8");
+  return {
+    filename,
+    blob: new Blob([rows.map((row) => row.map(csvCell).join(",")).join("\n")], { type: "text/csv;charset=utf-8" }),
+    mimeType: "text/csv"
+  };
 }
 
 function renderPlain(payload: ExportPayload) {
@@ -133,8 +163,40 @@ function renderPlain(payload: ExportPayload) {
   ].join("\n");
 }
 
-function saveBlob(content: string, filename: string, type: string) {
-  saveAs(new Blob([content], { type }), filename);
+async function saveExportFile(file: { filename: string; blob: Blob; mimeType: string }) {
+  if (!Capacitor.isNativePlatform()) {
+    saveAs(file.blob, file.filename);
+    return undefined;
+  }
+
+  const data = await blobToBase64(file.blob);
+  const write = await Filesystem.writeFile({
+    path: `FieldChat Notes/${file.filename}`,
+    data,
+    directory: Directory.Documents,
+    recursive: true
+  });
+
+  const canShare = await Share.canShare().catch(() => ({ value: false }));
+  if (canShare.value) {
+    await Share.share({
+      title: file.filename,
+      text: "FieldChat Notes export",
+      url: write.uri,
+      dialogTitle: "Share export"
+    }).catch(() => undefined);
+  }
+
+  return write.uri;
+}
+
+function blobToBase64(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(String(reader.result).split(",")[1] ?? "");
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
 }
 
 function csvCell(value: string) {

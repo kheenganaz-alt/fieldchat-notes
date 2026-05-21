@@ -5,6 +5,7 @@ import { useAppStore } from "../store/appStore";
 
 const items = [
   { to: "/", label: "Dashboard", icon: Home },
+  { to: "/sessions", label: "Sessions", icon: MessageSquareText },
   { to: "/reports", label: "Reports", icon: FileText },
   { to: "/search", label: "Search", icon: Search },
   { to: "/insights", label: "Insights", icon: BarChart3 },
