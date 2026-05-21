@@ -2,8 +2,8 @@ import type { LucideIcon } from "lucide-react";
 
 export default function MetricCard({ label, value, icon: Icon, tone = "blue" }: { label: string; value: string | number; icon: LucideIcon; tone?: "blue" | "violet" | "mint" | "amber" }) {
   const colors = {
-    blue: "from-blue-600 to-sky-500",
-    violet: "from-violet-600 to-fuchsia-500",
+    blue: "from-orange-500 to-red-500",
+    violet: "from-orange-500 to-amber-500",
     mint: "from-emerald-600 to-teal-500",
     amber: "from-amber-500 to-orange-500"
   };

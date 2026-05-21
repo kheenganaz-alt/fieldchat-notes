@@ -72,6 +72,7 @@ export default function SessionRecorder() {
   }
 
   async function voice() {
+    if (store.settings?.voiceNotesEnabled === false) return;
     await requestMicrophoneOnDemand();
     await stamp("Voice Note Started", "chip");
   }
@@ -83,8 +84,8 @@ export default function SessionRecorder() {
         session: { ...activeSession, durationSeconds: elapsed },
         notes: store.notes.filter((note) => note.sessionId === sessionId),
         timestamps: store.timestamps.filter((event) => event.sessionId === sessionId),
-        photos: store.photos.filter((photo) => photo.sessionId === sessionId)
-      }, format);
+        photos: store.settings?.includePhotosInExports === false ? [] : store.photos.filter((photo) => photo.sessionId === sessionId)
+      }, format, { share: store.settings?.autoShareExports !== false });
       setExportError(`Export ready: ${result.filename}`);
     } catch (error) {
       setExportError(error instanceof Error ? error.message : "Export failed.");
@@ -146,22 +147,22 @@ export default function SessionRecorder() {
         </div>
       </div>
 
-      <button aria-label="Instant timestamp" onClick={() => stamp("Floating Mark", "floating")} className="fixed bottom-36 right-4 z-30 grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-blue-600 to-violet-600 text-white shadow-glass active:scale-95 lg:right-8">
+      <button aria-label="Instant timestamp" onClick={() => stamp("Floating Mark", "floating")} className="fixed bottom-[calc(env(safe-area-inset-bottom)+8.75rem)] right-4 z-30 grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-glass active:scale-95 lg:right-8">
         <Zap size={28} />
       </button>
 
       <footer className="z-20 border-t border-slate-200 bg-white/94 px-3 pt-3 backdrop-blur-xl safe-bottom dark:border-white/10 dark:bg-slate-950/94">
         <div className="mx-auto max-w-4xl">
           <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
-            {quickEvents.map((event) => (
+            {quickEvents.filter((event) => store.settings?.quickEventSettings?.[event] ?? true).map((event) => (
               <button key={event} onClick={() => stamp(event, "chip")} className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">{event}</button>
             ))}
           </div>
           <form onSubmit={submit} className="flex items-end gap-2">
             <button type="button" onClick={photo} className="tap-target rounded-2xl bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-200"><Camera size={20} /></button>
-            <button type="button" onClick={voice} className="tap-target rounded-2xl bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-200"><Mic size={20} /></button>
+            <button type="button" onClick={voice} className="tap-target rounded-2xl bg-slate-100 text-slate-600 disabled:opacity-40 dark:bg-white/10 dark:text-slate-200" disabled={store.settings?.voiceNotesEnabled === false}><Mic size={20} /></button>
             <textarea value={draft} onChange={(event) => store.setDraft(id, event.target.value)} placeholder="Message" rows={1} className="max-h-28 min-h-11 flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-white/10 dark:bg-white/5" />
-            <button type="submit" className="tap-target rounded-2xl bg-blue-600 text-white"><Send size={19} /></button>
+            <button type="submit" className="tap-target rounded-2xl bg-orange-500 text-white"><Send size={19} /></button>
           </form>
           <div className="mt-3 flex items-center justify-between gap-2">
             <div className="flex gap-1">

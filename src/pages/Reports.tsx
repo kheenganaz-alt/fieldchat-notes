@@ -23,8 +23,8 @@ export default function Reports() {
         },
         notes: store.notes.filter((note) => note.sessionId === sessionId),
         timestamps: store.timestamps.filter((event) => event.sessionId === sessionId),
-        photos: store.photos.filter((photo) => photo.sessionId === sessionId)
-      }, format);
+        photos: store.settings?.includePhotosInExports === false ? [] : store.photos.filter((photo) => photo.sessionId === sessionId)
+      }, format, { share: store.settings?.autoShareExports !== false });
       setMessage(`Export ready: ${result.filename}`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Export failed.");

@@ -24,7 +24,7 @@ export default function Dashboard() {
   }
 
   return (
-    <Page title="Dashboard" subtitle="Fast operational view across sessions, routes, exports, and field activity." action={<button onClick={quickStart} className="tap-target rounded-2xl bg-blue-600 px-4 text-sm font-bold text-white shadow-soft">Start</button>}>
+    <Page title="Dashboard" subtitle="Fast operational view across sessions, routes, exports, and field activity." action={<button onClick={quickStart} className="tap-target rounded-2xl bg-orange-500 px-4 text-sm font-bold text-white shadow-soft">Start</button>}>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Total Sessions" value={sessions.length} icon={MessageSquareText} tone="blue" />
         <MetricCard label="Completed Sessions" value={completed} icon={ListChecks} tone="mint" />
@@ -43,13 +43,13 @@ export default function Dashboard() {
               <AreaChart data={trend}>
                 <defs>
                   <linearGradient id="sessionFill" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.45} />
-                    <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.03} />
+                    <stop offset="5%" stopColor="#ff641e" stopOpacity={0.45} />
+                    <stop offset="95%" stopColor="#ef3f19" stopOpacity={0.03} />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="day" axisLine={false} tickLine={false} />
                 <Tooltip />
-                <Area type="monotone" dataKey="sessions" stroke="#2563eb" fill="url(#sessionFill)" strokeWidth={3} />
+                <Area type="monotone" dataKey="sessions" stroke="#ff641e" fill="url(#sessionFill)" strokeWidth={3} />
               </AreaChart>
             </ResponsiveContainer>
           </div>

@@ -243,6 +243,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     await putRecord("settings", next);
     set({ settings: next });
     document.documentElement.classList.toggle("dark", next.darkMode);
+    applyThemeAccent(next.themeAccent);
     void syncUserData(next.userId);
   },
 
@@ -312,8 +313,10 @@ async function loadUserData(user: UserProfile) {
     getByUser("exports", user.id),
     getByUser("settings", user.id)
   ]);
-  const settings = settingsRows[0] ?? (await ensureSettings(user.id));
+  const settings = settingsRows[0] ? normalizeSettings(settingsRows[0]) : await ensureSettings(user.id);
+  if (settingsRows[0]) await putRecord("settings", settings);
   document.documentElement.classList.toggle("dark", settings.darkMode);
+  applyThemeAccent(settings.themeAccent);
   useAppStore.setState({
     sessions: sessions.sort((a, b) => b.startedAt.localeCompare(a.startedAt)),
     notes: notes.sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
@@ -326,15 +329,66 @@ async function loadUserData(user: UserProfile) {
   });
 }
 
+function applyThemeAccent(accent: UserSettings["themeAccent"]) {
+  const root = document.documentElement;
+  const values = {
+    shopit: ["22 100% 55%", "14 90% 50%"],
+    blue: ["221 83% 53%", "199 89% 48%"],
+    slate: ["222 47% 11%", "220 9% 46%"]
+  }[accent ?? "shopit"];
+  root.style.setProperty("--primary", values[0]);
+  root.style.setProperty("--accent", values[1]);
+}
+
+function normalizeSettings(settings: UserSettings): UserSettings {
+  const quickEventSettings = Object.fromEntries(quickEvents.map((event) => [event, settings.quickEventSettings?.[event] ?? true]));
+  return {
+    ...settings,
+    fakeContactName: settings.fakeContactName ?? "Mom",
+    pinLock: settings.pinLock ?? false,
+    pinCode: settings.pinCode ?? "",
+    themeAccent: settings.themeAccent ?? "shopit",
+    timestampPrecision: settings.timestampPrecision ?? "seconds",
+    autoOpenTimestamp: settings.autoOpenTimestamp ?? true,
+    voiceNotesEnabled: settings.voiceNotesEnabled ?? true,
+    defaultExportFormat: settings.defaultExportFormat ?? "pdf",
+    includePhotosInExports: settings.includePhotosInExports ?? true,
+    autoShareExports: settings.autoShareExports ?? true,
+    offlineCache: settings.offlineCache ?? true,
+    autoSync: settings.autoSync ?? true,
+    permissionCamera: settings.permissionCamera ?? "ask_when_used",
+    permissionMicrophone: settings.permissionMicrophone ?? "ask_when_used",
+    permissionLocation: settings.permissionLocation ?? "ask_when_used",
+    quickEventSettings
+  };
+}
+
 async function ensureSettings(userId: string) {
   const createdAt = nowIso();
+  const quickEventSettings = Object.fromEntries(quickEvents.map((event) => [event, true]));
   const settings: UserSettings = {
     id: `settings_${userId}`,
     userId,
     darkMode: false,
     discreetMode: false,
+    fakeContactName: "Mom",
     vibration: true,
     autoResume: true,
+    pinLock: false,
+    pinCode: "",
+    themeAccent: "shopit",
+    timestampPrecision: "seconds",
+    autoOpenTimestamp: true,
+    voiceNotesEnabled: true,
+    defaultExportFormat: "pdf",
+    includePhotosInExports: true,
+    autoShareExports: true,
+    offlineCache: true,
+    autoSync: true,
+    permissionCamera: "ask_when_used",
+    permissionMicrophone: "ask_when_used",
+    permissionLocation: "ask_when_used",
+    quickEventSettings,
     createdAt,
     updatedAt: createdAt
   };

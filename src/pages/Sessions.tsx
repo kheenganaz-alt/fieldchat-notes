@@ -30,8 +30,8 @@ export default function Sessions() {
         session: withLiveDuration(session),
         notes: store.notes.filter((note) => note.sessionId === session.id),
         timestamps: store.timestamps.filter((event) => event.sessionId === session.id),
-        photos: store.photos.filter((photo) => photo.sessionId === session.id)
-      }, format);
+        photos: store.settings?.includePhotosInExports === false ? [] : store.photos.filter((photo) => photo.sessionId === session.id)
+      }, format, { share: store.settings?.autoShareExports !== false });
       setMessage(`Export ready: ${result.filename}`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Export failed.");

@@ -26,12 +26,12 @@ export function hasExportContent(payload: ExportPayload) {
   return Boolean(payload.session && (payload.notes.length || payload.timestamps.length || payload.photos.length || payload.session.summary));
 }
 
-export async function exportSession(payload: ExportPayload, format: ExportFormat): Promise<ExportResult> {
+export async function exportSession(payload: ExportPayload, format: ExportFormat, options: { share?: boolean } = {}): Promise<ExportResult> {
   if (!hasExportContent(payload)) throw new Error("This session has no notes, timestamps, photos, or summary to export.");
 
   const filename = `${payload.session.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-${formatDateSlug(payload.session.startedAt)}`;
   const file = await buildExport(payload, format, filename);
-  const uri = await saveExportFile(file);
+  const uri = await saveExportFile(file, options);
 
   const record: ExportRecord = {
     id: createId("export"),
@@ -163,7 +163,7 @@ function renderPlain(payload: ExportPayload) {
   ].join("\n");
 }
 
-async function saveExportFile(file: { filename: string; blob: Blob; mimeType: string }) {
+async function saveExportFile(file: { filename: string; blob: Blob; mimeType: string }, options: { share?: boolean }) {
   if (!Capacitor.isNativePlatform()) {
     saveAs(file.blob, file.filename);
     return undefined;
@@ -178,7 +178,7 @@ async function saveExportFile(file: { filename: string; blob: Blob; mimeType: st
   });
 
   const canShare = await Share.canShare().catch(() => ({ value: false }));
-  if (canShare.value) {
+  if (options.share !== false && canShare.value) {
     await Share.share({
       title: file.filename,
       text: "FieldChat Notes export",

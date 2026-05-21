@@ -4,6 +4,14 @@
 
 :root {
   color-scheme: light;
+  --background: 220 20% 97%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --muted: 30 20% 96%;
+  --muted-foreground: 220 9% 46%;
+  --border: 220 13% 91%;
+  --primary: 22 100% 55%;
+  --accent: 14 90% 50%;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -11,13 +19,20 @@
 
 .dark {
   color-scheme: dark;
+  --background: 224 30% 8%;
+  --foreground: 210 20% 98%;
+  --card: 224 30% 12%;
+  --muted: 224 20% 16%;
+  --muted-foreground: 218 11% 55%;
+  --border: 224 20% 18%;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #f8fafc;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
 button, input, textarea, select {
@@ -34,11 +49,37 @@ button, input, textarea, select {
   }
 
   .glass {
-    @apply border border-white/50 bg-white/80 shadow-glass backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/75;
+    @apply border shadow-soft backdrop-blur-xl;
+    border-color: hsl(var(--border));
+    background-color: hsl(var(--card) / 0.92);
   }
 
   .tap-target {
     min-height: 44px;
     min-width: 44px;
+  }
+
+  .base-card {
+    border-color: hsl(var(--border));
+    background-color: hsl(var(--card));
+    @apply rounded-2xl border p-4;
+  }
+
+  .base-muted {
+    background-color: hsl(var(--muted));
+  }
+
+  .base-section-title {
+    color: hsl(var(--muted-foreground));
+    @apply text-sm font-semibold uppercase tracking-wider;
+  }
+
+  .base-primary {
+    background-color: hsl(var(--primary));
+    color: white;
+  }
+
+  .base-primary-text {
+    color: hsl(var(--primary));
   }
 }
